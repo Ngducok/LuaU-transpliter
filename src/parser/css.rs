@@ -1,11 +1,17 @@
+// parser/css.rs — Simple CSS parser that extracts selector-declaration rule blocks.
+// Handles nested @-rules (media queries, keyframes) by skipping them.
+
 use anyhow::Result;
 use std::collections::HashMap;
 
+/// Represents a single CSS rule: one or more selectors and their key-value declarations.
 pub struct CssRule {
     pub selectors: Vec<String>,
     pub declarations: HashMap<String, String>,
 }
 
+/// Parses CSS source into a list of CssRule blocks.
+/// Skips @-rules (media queries, keyframes, etc.) entirely.
 pub fn parse(css: &str) -> Result<Vec<CssRule>> {
     if css.trim().is_empty() {
         return Ok(Vec::new());

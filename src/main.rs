@@ -1,3 +1,6 @@
+// main.rs — CLI entry point for the hluau transpiler.
+// Usage: hluau compile --html file.html --css file.css --output out.luau [--standalone]
+
 use clap::{Parser, Subcommand};
 use std::fs;
 use std::path::PathBuf;

@@ -1,8 +1,12 @@
+// parser/html.rs — Parses HTML into a LuauNode tree.
+// Maps HTML tags to Roblox instance types, extracts text, attributes, and events.
+
 use crate::dom::LuauNode;
 use anyhow::Result;
 use std::cell::RefCell;
 use kuchiki::traits::TendrilSink;
 
+/// Maps an HTML tag name to the corresponding Roblox instance class.
 fn instance_type_from_tag(tag: &str, input_type: Option<&str>) -> &'static str {
     match tag.to_lowercase().as_str() {
         "screengui" | "gui" => "ScreenGui",
@@ -28,6 +32,7 @@ fn instance_type_from_tag(tag: &str, input_type: Option<&str>) -> &'static str {
     }
 }
 
+/// Returns true if the tag is a text-bearing HTML element (p, span, h1-h6, etc.).
 fn is_text_container(tag: &str) -> bool {
     matches!(
         tag.to_lowercase().as_str(),
@@ -35,6 +40,7 @@ fn is_text_container(tag: &str) -> bool {
     )
 }
 
+/// Returns true if the tag is an inline formatting element (b, i, u, span).
 fn is_inline_formatting(tag: &str) -> bool {
     matches!(tag.to_lowercase().as_str(), "b" | "i" | "u" | "span")
 }
@@ -86,6 +92,7 @@ fn css_color_to_hex(color: &str) -> String {
     }
 }
 
+/// Recursively collects inner text/HTML from a node, preserving rich text tags.
 fn collect_rich_text(node: &kuchiki::NodeRef) -> String {
     let mut out = String::new();
     for child in node.children() {
@@ -122,6 +129,7 @@ fn collect_rich_text(node: &kuchiki::NodeRef) -> String {
     out
 }
 
+/// Recursively traverses the HTML DOM, converting each element into a LuauNode.
 fn traverse(node: &kuchiki::NodeRef, counter: &RefCell<u32>) -> Option<LuauNode> {
     let el = node.as_element()?;
     let tag = el.name.local.as_ref().to_string();
@@ -140,6 +148,20 @@ fn traverse(node: &kuchiki::NodeRef, counter: &RefCell<u32>) -> Option<LuauNode>
         .unwrap_or_else(|| format!("{}_{}", tag, id));
 
     let mut luau = LuauNode::new(&instance_type, &name);
+
+    // Build source_tag for comment generation: e.g. `<div class="panel main-panel">`
+    {
+        let attrs = el.attributes.borrow();
+        let mut source = format!("<{}", tag);
+        if let Some(id_val) = attrs.get("id") {
+            source.push_str(&format!(" id=\"{}\"", id_val));
+        }
+        if let Some(class_val) = attrs.get("class") {
+            source.push_str(&format!(" class=\"{}\"", class_val));
+        }
+        source.push('>');
+        luau.source_tag = Some(source);
+    }
 
     if let Some(style_attr) = el.attributes.borrow().get("style") {
         let style_map = parse_inline_style(style_attr);

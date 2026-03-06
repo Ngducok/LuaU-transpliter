@@ -1,5 +1,10 @@
+// layout/engine.rs — Transforms the DOM tree into a layout-ready structure.
+// Injects Roblox UI helper objects (UIListLayout, UIPadding, UICorner, etc.)
+// and resolves CSS layout properties into Roblox equivalents.
+
 use crate::dom::LuauNode;
 
+/// Parses a CSS shorthand padding value (e.g. "10px 20px") into (top, right, bottom, left).
 fn parse_padding(value: &str) -> (f32, f32, f32, f32) {
     let parts: Vec<f32> = value
         .split_whitespace()
@@ -13,6 +18,7 @@ fn parse_padding(value: &str) -> (f32, f32, f32, f32) {
     }
 }
 
+/// Converts a CSS border-radius value (px or %) to a Roblox UDim CornerRadius.
 fn parse_corner_radius(value: &str) -> String {
     let value = value.trim();
     if value.ends_with('%') {
@@ -33,10 +39,13 @@ fn parse_corner_radius(value: &str) -> String {
     }
 }
 
+/// Parses a single padding value like "10px" into a float.
 fn parse_padding_value(v: &str) -> f32 {
     v.trim_end_matches("px").parse::<f32>().unwrap_or(0.0)
 }
 
+/// Injects UI helper objects (padding, corners, flex layout, grid, etc.) into a node.
+/// This is where CSS layout concepts are translated into Roblox UI constraints.
 fn inject_helpers(node: &mut LuauNode, parent_flex_column: Option<bool>) {
     if let Some(is_column) = parent_flex_column {
         let has_size = node.properties.contains_key("SizeX") || node.properties.contains_key("SizeY");
@@ -242,6 +251,7 @@ fn inject_helpers(node: &mut LuauNode, parent_flex_column: Option<bool>) {
     }
 }
 
+/// Extracts the X-axis (scale, offset) pair from a UDim2 string representation.
 fn parse_udim2_x(s: &str) -> (f32, f32) {
     let s = s.trim();
     if s.starts_with("UDim2.fromScale(") {
@@ -264,6 +274,7 @@ fn parse_udim2_x(s: &str) -> (f32, f32) {
     }
 }
 
+/// Extracts the Y-axis (scale, offset) pair from a UDim2 string representation.
 fn parse_udim2_y(s: &str) -> (f32, f32) {
     let s = s.trim();
     if s.starts_with("UDim2.fromScale(") {
@@ -286,6 +297,7 @@ fn parse_udim2_y(s: &str) -> (f32, f32) {
     }
 }
 
+/// Combines separate SizeX/SizeY properties into a single UDim2 Size property.
 fn build_size(node: &LuauNode) -> Option<String> {
     let x = node.properties.get("SizeX");
     let y = node.properties.get("SizeY");
@@ -307,6 +319,7 @@ fn build_size(node: &LuauNode) -> Option<String> {
     }
 }
 
+/// Finalizes node properties: builds Size from SizeX/SizeY and sets root defaults.
 fn finalize_properties(node: &mut LuauNode, is_root: bool) {
     if let Some(size) = build_size(node) {
         node.properties.insert("Size".to_string(), size);
@@ -317,6 +330,7 @@ fn finalize_properties(node: &mut LuauNode, is_root: bool) {
     }
 }
 
+/// Recursively transforms a node: injects helpers, finalizes properties, then recurses.
 fn transform_node(node: &mut LuauNode, is_root: bool) {
     inject_helpers(node, None);
     finalize_properties(node, is_root);
@@ -325,6 +339,7 @@ fn transform_node(node: &mut LuauNode, is_root: bool) {
     }
 }
 
+/// Entry point: transforms the entire DOM tree for layout, injecting all UI helpers.
 pub fn transform(mut node: LuauNode) -> LuauNode {
     transform_node(&mut node, true);
     node

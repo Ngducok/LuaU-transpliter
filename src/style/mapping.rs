@@ -1,5 +1,9 @@
+// style/mapping.rs — Maps CSS properties to Roblox Luau UI properties.
+// Handles color conversion, size units (px/%%/vw/vh), layout, and text properties.
+
 use std::collections::HashMap;
 
+/// Converts a CSS width value (px, %, vw) to a UDim2 X-axis representation.
 pub fn to_udim2_x(value: &str) -> String {
     let value = value.trim();
     if value.ends_with('%') {
@@ -22,6 +26,7 @@ pub fn to_udim2_x(value: &str) -> String {
     }
 }
 
+/// Converts a CSS height value (px, %, vh) to a UDim2 Y-axis representation.
 pub fn to_udim2_y(value: &str) -> String {
     let value = value.trim();
     if value.ends_with('%') {
@@ -52,6 +57,7 @@ pub fn to_udim2_offset(x: f32, y: f32) -> String {
     format!("UDim2.fromOffset({}, {})", x, y)
 }
 
+/// Converts a CSS color value (#hex, rgb(), var()) to a Roblox Color3 expression.
 pub fn color_to_luau(value: &str) -> String {
     let value = value.trim();
     if value.starts_with('#') {
@@ -106,6 +112,8 @@ pub fn color_to_luau(value: &str) -> String {
     }
 }
 
+/// Maps a set of CSS properties to their Roblox Luau UI equivalents.
+/// This is the main translation layer between CSS concepts and Roblox properties.
 pub fn map_css_to_luau(properties: &HashMap<String, String>) -> HashMap<String, String> {
     let mut luau = HashMap::new();
     for (k, v) in properties {

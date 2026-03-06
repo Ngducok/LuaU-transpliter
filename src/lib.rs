@@ -1,3 +1,6 @@
+// lib.rs — hluau library: HTML/CSS to Luau UI transpiler.
+// Pipeline: HTML parse → CSS resolve → layout transform → Luau codegen.
+
 pub mod dom;
 pub mod parser;
 pub mod style;
@@ -6,6 +9,7 @@ pub mod codegen;
 
 use anyhow::Result;
 
+/// Compiles HTML+CSS into a Luau module that returns the root ScreenGui.
 pub fn compile(html: &str, css: &str) -> Result<String> {
     compile_internal(html, css, false)
 }

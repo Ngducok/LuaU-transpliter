@@ -1,9 +1,14 @@
+// style/resolver.rs — Resolves CSS rules against the DOM tree.
+// Matches CSS selectors to nodes and applies the mapped Luau properties.
+
 use crate::dom::LuauNode;
 use crate::parser::css;
 use crate::style::mapping;
 use anyhow::Result;
 use std::collections::HashMap;
 
+/// Tests whether a CSS selector matches a given LuauNode.
+/// Supports #id, .class, and tag-name selectors.
 fn selector_matches(selector: &str, node: &LuauNode) -> bool {
     let selector = selector.trim();
     if selector.starts_with('#') {
@@ -38,6 +43,7 @@ fn selector_matches(selector: &str, node: &LuauNode) -> bool {
     }
 }
 
+/// Applies matching CSS rules to a node, merging declarations and mapping to Luau props.
 fn resolve_node(node: &mut LuauNode, rules: &[css::CssRule]) {
     let mut merged: HashMap<String, String> = HashMap::new();
     for rule in rules {
@@ -63,6 +69,7 @@ fn resolve_node(node: &mut LuauNode, rules: &[css::CssRule]) {
     }
 }
 
+/// Entry point: parses CSS and resolves all rules against the DOM tree.
 pub fn resolve(dom: &mut LuauNode, css_input: &str) -> Result<()> {
     let rules = css::parse(css_input)?;
     resolve_node(dom, &rules);
