@@ -1,0 +1,17 @@
+[package]
+name = "hluau"
+version = "0.1.0"
+edition = "2021"
+description = "HTML/CSS to Luau UI transpiler"
+
+[[bin]]
+name = "hluau"
+path = "src/main.rs"
+
+[dependencies]
+kuchiki = "0.8"
+lightningcss = "1.0.0-alpha.36"
+clap = { version = "4", features = ["derive"] }
+toml = "0.8"
+thiserror = "1.0"
+anyhow = "1.0"
